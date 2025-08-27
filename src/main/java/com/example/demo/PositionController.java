@@ -10,21 +10,15 @@ import org.springframework.web.reactive.function.client.WebClient;
 @RequiredArgsConstructor
 @Controller
 public class PositionController {
+    /*private WebClient client =
+            WebClient.create("http://localhost:7634/api/aircraft");
+            больше не нужен по причине перехода на платформу обмена сообщений RabbitMQ
+            */
     @NonNull
     private final AircraftRepository repository;
-    private WebClient client =
-            WebClient.create("http://localhost:7634/api/aircraft");
+
     @GetMapping("/aircraft")
     public String getCurrentAircraftPositions(Model model) {
-        repository.deleteAll();
-
-        client.get()
-                .retrieve()
-                .bodyToFlux(Aircraft.class)
-                .filter(plane -> !plane.getReg().isEmpty())
-                .toStream()
-                .forEach(repository::save);
-        
         model.addAttribute("currentPositions", repository.findAll());
         return "positions";
     }
