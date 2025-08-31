@@ -1,6 +1,9 @@
-package com.example.demo;
+package com.example.demo.WebSocket;
 
+import com.example.demo.AircraftRepository;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -9,11 +12,12 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-
+@RequiredArgsConstructor
+@Component
 public class WebSocketHandler extends TextWebSocketHandler {
     private final List<WebSocketSession> sessionList = new ArrayList<>();
     @NonNull
-    private AircraftRepository repository;
+    private final AircraftRepository repository;
 
     public List<WebSocketSession> getSessionList() {
         return this.sessionList;

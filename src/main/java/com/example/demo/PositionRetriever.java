@@ -1,25 +1,42 @@
 package com.example.demo;
 
+import com.example.demo.WebSocket.WebSocketHandler;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
 @AllArgsConstructor
 @Configuration
 public class PositionRetriever {
-    private final AircraftRepository aircraftRepository;
-
+    private final AircraftRepository repository;
+    private final WebSocketHandler handler;
     @Bean
     Consumer<List<Aircraft>> retrieveAircraftPositions() {
         return acList -> {
-            aircraftRepository.deleteAll();
+            repository.deleteAll();
 
-            aircraftRepository.saveAll(acList);
+            repository.saveAll(acList);
 
-            aircraftRepository.findAll().forEach(System.out::println);
+            sendPositions();
         };
+    }
+    private void sendPositions() {
+        if (repository.count() > 0) {
+            for (WebSocketSession sessionInList : handler.getSessionList()) {
+                try {
+                    sessionInList.sendMessage(
+                            new TextMessage(repository.findAll().toString())
+                    );
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
