@@ -1,18 +1,19 @@
 package com.example.demo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.Instant;
 
-@Entity
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Table("aircraft")
 public class Aircraft {
     @Id
     private Long id;
