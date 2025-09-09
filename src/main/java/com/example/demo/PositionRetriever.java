@@ -18,8 +18,10 @@ public class PositionRetriever {
     private final ObjectMapper objectMapper;
 
     @Bean
-    Consumer<Flux<String>> retrieveAircraftPositions() {
+    public Consumer<Flux<String>> retrieveAircraftPositions() {
         return jsonMessages -> {
+            System.out.println("Consumer registered, waiting for JSON messages...");
+
             jsonMessages
                     .doOnNext(json -> System.out.println("RECEIVED JSON: " + json))
                     .flatMap(json -> parseAircraft(json)
@@ -30,10 +32,6 @@ public class PositionRetriever {
                     .buffer(100)
                     .flatMap(aircrafts -> processAircraftBatch(aircrafts))
                     .then(Mono.defer(this::sendPositionsReactive))
-                    .onErrorResume(e -> {
-                        System.err.println("Fatal error in stream processing: " + e.getMessage());
-                        return Mono.empty();
-                    })
                     .subscribe(
                             v -> System.out.println("Processing completed successfully"),
                             e -> System.err.println("Subscription error: " + e.getMessage()),
