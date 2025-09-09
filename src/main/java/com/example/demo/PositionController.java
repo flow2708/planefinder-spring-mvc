@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
@@ -18,9 +17,7 @@ public class PositionController {
     public Mono<String> getCurrentAircraftPositions(Model model) {
         return repository.findAll()
                 .collectList()
-                .map(aircraftList -> {
-                    model.addAttribute("currentPositions", aircraftList);
-                    return "positions";
-                });
+                .doOnNext(aircraftList -> model.addAttribute("currentPositions", aircraftList))
+                .thenReturn("positions");
     }
 }
