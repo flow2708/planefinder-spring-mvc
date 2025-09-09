@@ -15,9 +15,16 @@ public class PositionController {
 
     @GetMapping("/aircraft")
     public Mono<String> getCurrentAircraftPositions(Model model) {
+        System.out.println("Request to /aircraft received");
+
         return repository.findAll()
                 .collectList()
-                .doOnNext(aircraftList -> model.addAttribute("currentPositions", aircraftList))
-                .thenReturn("positions");
+                .doOnNext(aircraftList -> {
+                    System.out.println("Found " + aircraftList.size() + " aircraft in database");
+                    model.addAttribute("currentPositions", aircraftList);
+                })
+                .thenReturn("positions")
+                .doOnSuccess(template -> System.out.println("Returning template: " + template))
+                .doOnError(e -> System.err.println("Error in /aircraft: " + e.getMessage()));
     }
 }

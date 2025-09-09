@@ -8,12 +8,21 @@
 <script type="text/javascript">
   window.onload = setupRefresh;
   function setupRefresh() {
-    setTimeout("refreshPage();", 5000); // частота обновления в миллисекундах
+    setTimeout("refreshPage();", 5000);
   }
   function refreshPage() {
     window.location = location.href;
   }
 </script>
+
+<!-- Добавляем отладочную информацию -->
+<div th:if="${currentPositions != null}">
+  <p>Aircraft count: [[${currentPositions.size()}]]</p>
+</div>
+<div th:if="${currentPositions == null}">
+  <p>currentPositions is NULL</p>
+</div>
+
 <div class="positionlist" th:unless="${#lists.isEmpty(currentPositions)}">
   <h2>Current Aircraft Positions</h2>
   <table>
@@ -32,7 +41,6 @@
       <th>Latitude</th>
       <th>Longitude</th>
       <th>Last Seen</th>
-      <th></th>
     </tr>
     </thead>
     <tbody>
@@ -53,6 +61,12 @@
     </tr>
     </tbody>
   </table>
+</div>
+
+<div th:if="${#lists.isEmpty(currentPositions)}">
+  <h2>No aircraft positions available</h2>
+  <p>Send test messages from <a href="/test/send-test">here</a></p>
+  <p>Or send multiple test messages from <a href="/test/send-multiple">here</a></p>
 </div>
 </body>
 </html>

@@ -5,13 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
 
 @AllArgsConstructor
-@Configuration
+@Component
 public class PositionRetriever {
     private final AircraftRepository repository;
     private final ReactiveWebSocketHandler handler;
