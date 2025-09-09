@@ -27,9 +27,13 @@ public class PositionRetriever {
                                 System.err.println("Error parsing JSON: " + e.getMessage());
                                 return Mono.empty();
                             }))
-                    .buffer(100) // Буферизация для batch обработки
+                    .buffer(100)
                     .flatMap(aircrafts -> processAircraftBatch(aircrafts))
                     .then(Mono.defer(this::sendPositionsReactive))
+                    .onErrorResume(e -> {
+                        System.err.println("Fatal error in stream processing: " + e.getMessage());
+                        return Mono.empty();
+                    })
                     .subscribe(
                             v -> System.out.println("Processing completed successfully"),
                             e -> System.err.println("Subscription error: " + e.getMessage()),
@@ -40,7 +44,11 @@ public class PositionRetriever {
 
     private Mono<Aircraft> parseAircraft(String json) {
         return Mono.fromCallable(() -> objectMapper.readValue(json, Aircraft.class))
-                .doOnNext(ac -> System.out.println("PARSED AIRCRAFT: " + ac.getCallsign() + " - " + ac.getReg()));
+                .doOnNext(ac -> System.out.println("PARSED AIRCRAFT: " + ac.getCallsign() + " - " + ac.getReg()))
+                .onErrorResume(e -> {
+                    System.err.println("Failed to parse aircraft from JSON: " + e.getMessage());
+                    return Mono.empty();
+                });
     }
 
     private Mono<Void> processAircraftBatch(java.util.List<Aircraft> aircrafts) {
@@ -53,8 +61,13 @@ public class PositionRetriever {
 
         return repository.deleteAll()
                 .doOnSuccess(v -> System.out.println("Database cleared"))
+                .onErrorResume(e -> {
+                    System.err.println("Failed to clear database: " + e.getMessage());
+                    return Mono.empty();
+                })
                 .thenMany(repository.saveAll(aircrafts))
                 .doOnNext(saved -> System.out.println("Saved: " + saved.getCallsign()))
+                .doOnError(e -> System.err.println("Failed to save aircraft: " + e.getMessage()))
                 .then();
     }
 
@@ -64,6 +77,10 @@ public class PositionRetriever {
         return repository.findAll()
                 .collectList()
                 .doOnNext(aircraftList -> System.out.println("Found " + aircraftList.size() + " aircraft in DB"))
+                .onErrorResume(e -> {
+                    System.err.println("Failed to retrieve aircraft from database: " + e.getMessage());
+                    return Mono.just(java.util.Collections.emptyList());
+                })
                 .flatMap(aircraftList -> {
                     if (aircraftList.isEmpty()) {
                         System.out.println("No aircraft in database to send via WebSocket");
@@ -72,7 +89,8 @@ public class PositionRetriever {
 
                     String message = aircraftList.toString();
                     return handler.sendToAll(message)
-                            .doOnSuccess(v -> System.out.println("Sent WebSocket message to all active sessions"));
+                            .doOnSuccess(v -> System.out.println("Sent WebSocket message to all active sessions"))
+                            .doOnError(e -> System.err.println("Failed to send WebSocket message: " + e.getMessage()));
                 });
     }
 }
